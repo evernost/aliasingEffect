@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aliasing</title>
+</head>
+
+<body>
+  <h2>A study on the Aliasing Effect</h2>
+
+  <label for="freq1">Fundamental frequency: <span id="freq1Value">440</span> Hz</label>
+  <input type="range" id="freq1" min="50" max="2000" value="440" step="1">
+
+  <br><br>
+
+  <label for="freq2">Frequency 2: <span id="freq2Value">660</span> Hz</label>
+  <input type="range" id="freq2" min="50" max="2000" value="660" step="1">
+
+  <br><br>
+
+  <button id="startStop">Start</button>
+
+  <script>
+      let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      let osc1 = null, osc2 = null, gainNode = null;
+      let isPlaying = false;
+
+      const freq1Slider = document.getElementById("freq1");
+      const freq2Slider = document.getElementById("freq2");
+      const freq1ValueDisplay = document.getElementById("freq1Value");
+      const freq2ValueDisplay = document.getElementById("freq2Value");
+      const startStopButton = document.getElementById("startStop");
+
+      function startOscillators() {
+          if (!isPlaying) {
+              osc1 = audioCtx.createOscillator();
+              osc2 = audioCtx.createOscillator();
+              gainNode = audioCtx.createGain(); // To control volume if needed
+
+              osc1.type = "sine";
+              osc2.type = "sine";
+              osc1.frequency.value = freq1Slider.value;
+              osc2.frequency.value = freq2Slider.value;
+
+              // Mix the two oscillators by connecting them to the same gain node
+              osc1.connect(gainNode);
+              osc2.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
+
+              osc1.start();
+              osc2.start();
+              isPlaying = true;
+              startStopButton.textContent = "Stop";
+          }
+      }
+
+      function stopOscillators() {
+          if (isPlaying) {
+              osc1.stop();
+              osc2.stop();
+              osc1.disconnect();
+              osc2.disconnect();
+              gainNode.disconnect();
+              isPlaying = false;
+              startStopButton.textContent = "Start";
+          }
+      }
+
+      // Update frequency in real time
+      freq1Slider.addEventListener("input", function() {
+          freq1ValueDisplay.textContent = freq1Slider.value;
+          if (isPlaying) {
+              osc1.frequency.setValueAtTime(freq1Slider.value, audioCtx.currentTime);
+          }
+      });
+
+      freq2Slider.addEventListener("input", function() {
+          freq2ValueDisplay.textContent = freq2Slider.value;
+          if (isPlaying) {
+              osc2.frequency.setValueAtTime(freq2Slider.value, audioCtx.currentTime);
+          }
+      });
+
+      startStopButton.addEventListener("click", function() {
+          if (isPlaying) {
+              stopOscillators();
+          } else {
+              startOscillators();
+          }
+      });
+  </script>
+</body>
+</html>
