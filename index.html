@@ -10,6 +10,12 @@
 <body>
   <h2>A study on the Aliasing Effect</h2>
 
+  <label for="volSlider">Master level:</label>
+  <input type="range" id="volSlider" min="0" max="1" value="0.8" step="0.05">
+  <span id="volSliderDisplay">0.8</span>
+
+  <br><br>
+
   <label for="f0Slider">Fundamental frequency:</label>
   <input type="range" id="f0Slider" min="50" max="2000" value="440" step="1">
   <span id="f0ValDisplay">440 Hz</span>
@@ -23,8 +29,8 @@
   <br><br>
 
   <label for="decaySlider">Level decay:</label>
-  <input type="range" id="decaySlider" min="1.0" max="5.0" value="1.0" step="0.1">
-  <span id="decayValDisplay">2.0</span>
+  <input type="range" id="decaySlider" min="0.0" max="3.0" value="0.0" step="0.1">
+  <span id="decayValDisplay">(1/n)^2.0</span>
 
   <br><br>
 
@@ -32,4 +38,5 @@
 
   <script src="script.js" defer></script>
 </body>
+
 </html>
