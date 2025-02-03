@@ -5,36 +5,100 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aliasing</title>
+  <style>
+    body 
+    {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+      margin: 0;
+    }
+    .controls 
+    {
+      width: 20%;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: #f0f0f0;
+      border-right: 1px solid #ccc;
+    }
+    /* .canvas-container 
+    {
+      width: 70%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff;
+    }
+    canvas 
+    {
+      border: 1px solid #ccc;
+    } */
+    .canvas-container 
+    {
+      width: 70%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff;
+    }
+    canvas 
+    {
+      width: 80%;
+      height: 80%;
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
 
 <body>
-  <h2>A study on the Aliasing Effect</h2>
+  <div class="controls">
+    <h2>A study on the Aliasing Effect</h2>
 
-  <label for="volSlider">Master level:</label>
-  <input type="range" id="volSlider" min="0" max="1" value="0.8" step="0.05">
-  <span id="volSliderDisplay">0.8</span>
+    <label for="volSlider">Master level</label>
+    <input type="range" id="volSlider" min="0" max="1" value="0.8" step="0.05">
+    <span id="volSliderDisplay">0.8</span>
+    <br><br><br>
 
-  <br><br>
+    <label for="f0Slider">Fundamental frequency</label>
+    <input type="range" id="f0Slider" min="50" max="2000" value="440" step="1">
+    <span id="f0ValDisplay">440 Hz</span>
+    <br><br>
 
-  <label for="f0Slider">Fundamental frequency:</label>
-  <input type="range" id="f0Slider" min="50" max="2000" value="440" step="1">
-  <span id="f0ValDisplay">440 Hz</span>
+    <label for="harmonicsSlider">Harmonics</label>
+    <input type="range" id="harmonicsSlider" min="0" max="20" value="4" step="1">
+    <span id="harmonicsValDisplay">4</span>
+    <br><br>
 
-  <br><br>
+    <label for="decaySlider">Level decay</label>
+    <input type="range" id="decaySlider" min="0.0" max="3.0" value="2.0" step="0.1">
+    <span id="decayValDisplay">(1/n)^2.0</span>
+    <br><br>
 
-  <label for="harmonicsSlider">Harmonics: </label>
-  <input type="range" id="harmonicsSlider" min="0" max="20" value="2" step="1">
-  <span id="harmonicsValDisplay">2</span>
+    <label for="wiggleSlider">Wiggle amount</label>
+    <input type="range" id="wiggleSlider" min="-5.0" max="5.0" value="0.0" step="0.1">
+    <span id="wiggleValDisplay">0.0%</span>
+    <br><br>
 
-  <br><br>
+    <label for="oddOnlyCheckbox">Disable even</label>
+    <input type="checkbox" id="oddOnlyCheckbox" unchecked>
+    <br><br><br>
 
-  <label for="decaySlider">Level decay:</label>
-  <input type="range" id="decaySlider" min="0.0" max="3.0" value="0.0" step="0.1">
-  <span id="decayValDisplay">(1/n)^2.0</span>
+    <label for="lowerReflectCheckbox">Lower reflection</label>
+    <input type="checkbox" id="lowerReflectCheckbox" unchecked>
+    <br><br>
 
-  <br><br>
+    <label for="upperReflectCheckbox">Upper reflection</label>
+    <input type="checkbox" id="upperReflectCheckbox" unchecked>
+    <br><br>
 
-  <button id="startStop">Start</button>
+    <button id="startStop">Start</button>
+    
+  </div>
+
+  <div class="canvas-container">
+    <canvas id="spectrumCanvas"></canvas>
+  </div>
+
 
   <script src="script.js" defer></script>
 </body>
