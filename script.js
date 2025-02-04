@@ -28,22 +28,22 @@ function startOscillators()
       osc.type = "sine";
       osc.frequency.value = f0Slider.value*(i+1);
       
-      if (i % 2 === 0)
+      if (i <= harmonicsSlider.value)
       {
-        if (oddOnlyCheckbox.checked)
+        if (oddOnlyCheckbox.checked && (i % 2 === 1))
         {
-          gain.gain.value = REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value);
+          gain.gain.value = 0.0;
         }
         else
         {
-          gain.gain.value = 0.0;
+          gain.gain.value = REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value);
         }
       }
       else
       {
-        gain.gain.value = REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value);
+        gain.gain.value = 0.0;
       }
-      
+
       osc.connect(gain);
       gain.connect(masterGain);
 
@@ -58,6 +58,7 @@ function startOscillators()
 
     isPlaying = true;
     startStop.textContent = "Stop";
+    drawSpectrum()
   }
 }
 
@@ -106,6 +107,8 @@ function updateGains()
       }
     }
   }
+
+  drawSpectrum() 
 }
 
 function updateFrequencies()
@@ -159,13 +162,6 @@ f0Slider.addEventListener("input",
   {
     f0ValDisplay.textContent = f0Slider.value + ' Hz';
     updateFrequencies()
-    // if (isPlaying) 
-    // {
-    //   for (let i = 0; i < N_MAX_HARMONICS; i++)
-    //   {
-    //     oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1), audioCtx.currentTime);
-    //   }
-    // }
   }
 );
 
@@ -190,20 +186,6 @@ wiggleSlider.addEventListener("input",
   {
     wiggleValDisplay.textContent = wiggleSlider.value + '%';
     updateFrequencies()
-    // if (isPlaying) 
-    // {
-    //   for (let i = 1; i < N_MAX_HARMONICS; i++)
-    //   {
-    //     if (i % 2 === 0)
-    //     {
-    //       oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 + 0.01*wiggleSlider.value), audioCtx.currentTime);
-    //     }
-    //     else 
-    //     {
-    //       oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value), audioCtx.currentTime);
-    //     }
-    //   }
-    // }
   }
 );
 
@@ -229,6 +211,24 @@ startStop.addEventListener("click",
 );
 
 
+function drawOvertone(x, y1, y2, color = 'black', lineWidth = 2) 
+{
+  ctx.beginPath();
+  ctx.moveTo(x, y1);
+  ctx.lineTo(x, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x, y2, 2, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.closePath();
+}
+
+
+
 function drawSpectrum() 
 {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -236,21 +236,31 @@ function drawSpectrum()
   ctx.beginPath();
   ctx.moveTo(0, canvas.height / 2);
 
-  const time = audioCtx.currentTime;
-  for (let x = 0; x < canvas.width; x++) 
+  for (let i = 0; i < N_MAX_HARMONICS; i++)
+  {
+    if (i <= harmonicsSlider.value)
     {
-      let y = 0;
-      oscillators.forEach((oscillator, index) => {
-          y += 10*Math.sin(2 * Math.PI * oscillator.frequency.value * (x / canvas.width) + time) * gains[index].gain.value;
-      });
-      ctx.lineTo(x, canvas.height / 2 + y * canvas.height / 4);
+      let level = gains[i].gain.value*100/REF_LEVEL
+      drawOvertone((i+1)*50, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
+    }
   }
+
+
+  // const time = audioCtx.currentTime;
+  // for (let x = 0; x < canvas.width; x++) 
+  //   {
+  //     let y = 0;
+  //     oscillators.forEach((oscillator, index) => {
+  //         y += 10*Math.sin(2 * Math.PI * oscillator.frequency.value * (x / canvas.width) + time) * gains[index].gain.value;
+  //     });
+  //     ctx.lineTo(x, canvas.height / 2 + y * canvas.height / 4);
+  // }
 
   ctx.strokeStyle = 'blue';
   ctx.stroke();
 
 
-  requestAnimationFrame(drawSpectrum);
+  // requestAnimationFrame(drawSpectrum);
 }
 
 drawSpectrum();
