@@ -9,6 +9,7 @@ const canvas = document.getElementById('spectrumCanvas');
 const ctx = canvas.getContext('2d');
 
 const N_MAX_HARMONICS = 20;
+const REF_LEVEL = 0.01;
 
 
 
@@ -31,7 +32,7 @@ function startOscillators()
       {
         if (oddOnlyCheckbox.checked)
         {
-          gain.gain.value = 0.01*Math.pow(1 / (i+1), decaySlider.value);
+          gain.gain.value = REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value);
         }
         else
         {
@@ -40,7 +41,7 @@ function startOscillators()
       }
       else
       {
-        gain.gain.value = 0.01*Math.pow(1 / (i+1), decaySlider.value);
+        gain.gain.value = REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value);
       }
       
       osc.connect(gain);
@@ -72,7 +73,6 @@ function stopOscillators()
     }
     );
 
-    // Clear arrays
     oscillators = [];
     gains = [];
 
@@ -80,6 +80,7 @@ function stopOscillators()
     startStop.textContent = "Start";
   }
 }
+
 
 
 function updateGains()
@@ -96,7 +97,7 @@ function updateGains()
         }
         else
         {
-          gains[i].gain.setValueAtTime(0.01*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
+          gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
         }
       }
       else
@@ -107,26 +108,35 @@ function updateGains()
   }
 }
 
-
-
-if (isPlaying) 
+function updateFrequencies()
+{
+  if (isPlaying)
   {
-    if (oddOnlyCheckbox.checked)
+    for (let i = 0; i < N_MAX_HARMONICS; i++)
     {
-      for (let i = 1; i < N_MAX_HARMONICS; i+=2)
+      if (i <= harmonicsSlider.value)
       {
-        gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
+        let freq = 0.0;
+        if (i === 0)
+        {
+          freq = f0Slider.value;
+        }
+        else
+        {
+          if (i % 2 === 0)
+          {
+            freq = f0Slider.value*(i+1)*(1 + 0.01*wiggleSlider.value/i);
+          }
+          else
+          {
+            freq = f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value/i);
+          }
+        }
+        oscillators[i].frequency.setValueAtTime(freq, audioCtx.currentTime);
       }
     }
-    else
-    {
-      for (let i = 0; i < N_MAX_HARMONICS; i++)
-      {
-        gains[i].gain.setValueAtTime(0.01*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
-      }
-    } 
   }
-
+}
 
 
 
@@ -148,13 +158,14 @@ f0Slider.addEventListener("input",
   function() 
   {
     f0ValDisplay.textContent = f0Slider.value + ' Hz';
-    if (isPlaying) 
-    {
-      for (let i = 0; i < N_MAX_HARMONICS; i++)
-      {
-        oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1), audioCtx.currentTime);
-      }
-    }
+    updateFrequencies()
+    // if (isPlaying) 
+    // {
+    //   for (let i = 0; i < N_MAX_HARMONICS; i++)
+    //   {
+    //     oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1), audioCtx.currentTime);
+    //   }
+    // }
   }
 );
 
@@ -163,10 +174,6 @@ harmonicsSlider.addEventListener("input",
   {
     harmonicsValDisplay.textContent = harmonicsSlider.value;
     updateGains()
-    // if (isPlaying) 
-    // {
-    //   osc2.frequency.setValueAtTime(freq2Slider.value, audioCtx.currentTime);
-    // }
   }
 );
 
@@ -175,13 +182,6 @@ decaySlider.addEventListener("input",
   {
     decayValDisplay.textContent = '(1/n)^' + decaySlider.value;
     updateGains()
-    // if (isPlaying) 
-    // {
-    //   for (let i = 0; i < 10; i++)
-    //   {
-    //     gains[i].gain.setValueAtTime(0.01*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
-    //   }
-    // }
   }
 );
 
@@ -189,21 +189,21 @@ wiggleSlider.addEventListener("input",
   function() 
   {
     wiggleValDisplay.textContent = wiggleSlider.value + '%';
-    if (isPlaying) 
-    {
-      for (let i = 1; i < N_MAX_HARMONICS; i++)
-      {
-        if (i % 2 === 0)
-        {
-          oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 + 0.01*wiggleSlider.value), audioCtx.currentTime);
-        }
-        else 
-        {
-          oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value), audioCtx.currentTime);
-        }
-          
-      }
-    }
+    updateFrequencies()
+    // if (isPlaying) 
+    // {
+    //   for (let i = 1; i < N_MAX_HARMONICS; i++)
+    //   {
+    //     if (i % 2 === 0)
+    //     {
+    //       oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 + 0.01*wiggleSlider.value), audioCtx.currentTime);
+    //     }
+    //     else 
+    //     {
+    //       oscillators[i].frequency.setValueAtTime(f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value), audioCtx.currentTime);
+    //     }
+    //   }
+    // }
   }
 );
 
@@ -211,23 +211,6 @@ oddOnlyCheckbox.addEventListener("input",
   function() 
   {
     updateGains()
-    // if (isPlaying) 
-    // {
-    //   if (oddOnlyCheckbox.checked)
-    //   {
-    //     for (let i = 1; i < N_MAX_HARMONICS; i+=2)
-    //     {
-    //       gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
-    //     }
-    //   }
-    //   else
-    //   {
-    //     for (let i = 0; i < N_MAX_HARMONICS; i++)
-    //     {
-    //       gains[i].gain.setValueAtTime(0.01*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
-    //     }
-    //   } 
-    // }
   }
 );
 
