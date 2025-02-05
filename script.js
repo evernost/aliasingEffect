@@ -94,16 +94,19 @@ function updateGains()
       {
         if (oddOnlyCheckbox.checked && (i % 2 === 1))
         {
-          gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
+          // gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
+          gains[i].gain.value = 0.0;
         }
         else
         {
-          gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value), audioCtx.currentTime);
+          // gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value), audioCtx.currentTime);
+          gains[i].gain.value = REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value)
         }
       }
       else
       {
-        gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
+        // gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
+        gains[i].gain.value = 0.0;
       }
     }
     
