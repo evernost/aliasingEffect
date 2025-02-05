@@ -98,7 +98,7 @@ function updateGains()
         }
         else
         {
-          gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1 / (i+1), decaySlider.value), audioCtx.currentTime);
+          gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value), audioCtx.currentTime);
         }
       }
       else
@@ -106,6 +106,10 @@ function updateGains()
         gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
       }
     }
+    
+    console.log('Slider:', decaySlider.value);
+    console.log('gains[2] from <updateGains>:', gains[2].gain.value);
+    console.log('Math.pow(1.0 / 3, decaySlider.value):', Math.pow(1.0 / (2+1), decaySlider.value));
   }
 
   drawSpectrum() 
@@ -169,6 +173,7 @@ harmonicsSlider.addEventListener("input",
   function() 
   {
     harmonicsValDisplay.textContent = harmonicsSlider.value;
+    updateFrequencies()
     updateGains()
   }
 );
@@ -236,6 +241,8 @@ function drawSpectrum()
   ctx.beginPath();
   ctx.moveTo(0, canvas.height / 2);
 
+  console.log('gains[2] from <drawSpectrum>:', gains[2].gain.value);
+
   for (let i = 0; i < N_MAX_HARMONICS; i++)
   {
     if (i <= harmonicsSlider.value)
@@ -245,23 +252,10 @@ function drawSpectrum()
     }
   }
 
+  // ctx.strokeStyle = 'blue';
+  // ctx.stroke();
 
-  // const time = audioCtx.currentTime;
-  // for (let x = 0; x < canvas.width; x++) 
-  //   {
-  //     let y = 0;
-  //     oscillators.forEach((oscillator, index) => {
-  //         y += 10*Math.sin(2 * Math.PI * oscillator.frequency.value * (x / canvas.width) + time) * gains[index].gain.value;
-  //     });
-  //     ctx.lineTo(x, canvas.height / 2 + y * canvas.height / 4);
-  // }
-
-  ctx.strokeStyle = 'blue';
-  ctx.stroke();
-
-
-  // requestAnimationFrame(drawSpectrum);
 }
 
-drawSpectrum();
+// drawSpectrum();
 
