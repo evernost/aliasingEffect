@@ -9,7 +9,51 @@ const canvas = document.getElementById('spectrumCanvas');
 const ctx = canvas.getContext('2d');
 
 const N_MAX_HARMONICS = 20;
-const REF_LEVEL = 0.01;
+const REF_LEVEL = 0.05;
+
+
+
+class BounceLine
+{
+  constructor(x0, y0, x1, y1) 
+  {
+    this.x0 = x0;
+    this.y0 = y0;
+    this.x1 = x1;
+    this.y1 = y1;
+    this.isDragging = false;
+  }
+
+  isMouseNearLine(mx, my) 
+  {
+      const dist = Math.abs((this.y1 - this.y0) * mx - (this.x1 - this.x0) * my + this.x1 * this.y0 - this.y1 * this.x0) /
+                   Math.sqrt((this.y1 - this.y0) ** 2 + (this.x1 - this.x0) ** 2);
+      return dist < 10;
+  }
+
+  draw() 
+  {
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([10, 5]);
+    ctx.beginPath();
+    ctx.moveTo(this.x0, this.y0);
+    ctx.lineTo(this.x1, this.y1);
+    ctx.stroke();
+  }
+
+  move(dx, dy) 
+  {
+    this.x0 += dx;
+    this.y0 += dy;
+    this.x1 += dx;
+    this.y1 += dy;
+  }
+}
+
+
+let lowBounceLine = new BounceLine(100, 0, 100, canvas.height);
+let highBounceLine = new BounceLine(canvas.width - 100, 0, canvas.width - 100, canvas.height);
 
 
 
@@ -219,6 +263,64 @@ startStop.addEventListener("click",
 );
 
 
+
+canvas.addEventListener('mousedown', (e) => 
+  {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (lowBounceLine.isMouseNearLine(mouseX, mouseY)) 
+    {
+      // selectedLine = line;
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+      lowBounceLine.isDragging = true;
+    }
+  }
+);
+
+canvas.addEventListener('mousemove', (e) => 
+  {
+    if (lowBounceLine.isDragging)
+    {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+    
+      const dx = mouseX - lastMouseX;
+      const dy = mouseY - lastMouseY;
+    
+      lowBounceLine.move(dx, dy);
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+    
+      lowBounceLine.draw();
+    }
+
+    
+  }
+);
+
+canvas.addEventListener('mouseup', () => {
+  selectedLine = null;
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function drawOvertone(x, y1, y2, color = 'black', lineWidth = 2) 
 {
   ctx.beginPath();
@@ -226,11 +328,12 @@ function drawOvertone(x, y1, y2, color = 'black', lineWidth = 2)
   ctx.lineTo(x, y2);
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;
+  ctx.setLineDash([]);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.arc(x, y2, 2, 0, Math.PI * 2);
-  ctx.fillStyle = color;
+  ctx.arc(x, y2, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'blue';
   ctx.fill();
   ctx.closePath();
 }
@@ -241,10 +344,9 @@ function drawSpectrum()
 {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Draw the overtones
   ctx.beginPath();
   ctx.moveTo(0, canvas.height / 2);
-
-  console.log('gains[2] from <drawSpectrum>:', gains[2].gain.value);
 
   for (let i = 0; i < N_MAX_HARMONICS; i++)
   {
@@ -255,10 +357,8 @@ function drawSpectrum()
     }
   }
 
-  // ctx.strokeStyle = 'blue';
-  // ctx.stroke();
-
+  // Draw the axis
+  lowBounceLine.draw();
+  highBounceLine.draw();
 }
-
-// drawSpectrum();
 
