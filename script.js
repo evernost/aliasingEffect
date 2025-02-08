@@ -8,8 +8,11 @@ let isPlaying = false;
 const canvas = document.getElementById('spectrumCanvas');
 const ctx = canvas.getContext('2d');
 
-const N_MAX_HARMONICS = 20;
+const N_MAX_HARMONICS = 30;
 const REF_LEVEL = 0.05;
+
+const DISPLAY_FMAX = 4000.0;
+const DISPLAY_FMIN = -10.0;
 
 
 
@@ -26,9 +29,8 @@ class BounceLine
 
   isMouseNearLine(mx, my) 
   {
-      const dist = Math.abs((this.y1 - this.y0) * mx - (this.x1 - this.x0) * my + this.x1 * this.y0 - this.y1 * this.x0) /
-                   Math.sqrt((this.y1 - this.y0) ** 2 + (this.x1 - this.x0) ** 2);
-      return dist < 10;
+    const dist = Math.abs(this.x0 - mx);
+    return dist < 10;
   }
 
   draw() 
@@ -45,9 +47,9 @@ class BounceLine
   move(dx, dy) 
   {
     this.x0 += dx;
-    this.y0 += dy;
+    // this.y0 += dy;
     this.x1 += dx;
-    this.y1 += dy;
+    // this.y1 += dy;
   }
 }
 
@@ -138,28 +140,21 @@ function updateGains()
       {
         if (oddOnlyCheckbox.checked && (i % 2 === 1))
         {
-          // gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
           gains[i].gain.value = 0.0;
         }
         else
         {
-          // gains[i].gain.setValueAtTime(REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value), audioCtx.currentTime);
           gains[i].gain.value = REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value)
         }
       }
       else
       {
-        // gains[i].gain.setValueAtTime(0.0, audioCtx.currentTime);
         gains[i].gain.value = 0.0;
       }
     }
-    
-    console.log('Slider:', decaySlider.value);
-    console.log('gains[2] from <updateGains>:', gains[2].gain.value);
-    console.log('Math.pow(1.0 / 3, decaySlider.value):', Math.pow(1.0 / (2+1), decaySlider.value));
   }
 
-  drawSpectrum() 
+  drawSpectrum();
 }
 
 function updateFrequencies()
@@ -186,9 +181,12 @@ function updateFrequencies()
             freq = f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value/i);
           }
         }
-        oscillators[i].frequency.setValueAtTime(freq, audioCtx.currentTime);
+        // oscillators[i].frequency.setValueAtTime(freq, audioCtx.currentTime);
+        oscillators[i].frequency.value = freq;
       }
     }
+
+    drawSpectrum();
   }
 }
 
@@ -203,7 +201,8 @@ volSlider.addEventListener("input",
     volSliderDisplay.textContent = volSlider.value;
     if (isPlaying) 
     {
-      masterGain.gain.setValueAtTime(volSlider.value, audioCtx.currentTime);
+      // masterGain.gain.setValueAtTime(volSlider.value, audioCtx.currentTime);
+      masterGain.gain.value = volSlider.value;
     }
   }
 );
@@ -272,7 +271,6 @@ canvas.addEventListener('mousedown', (e) =>
 
     if (lowBounceLine.isMouseNearLine(mouseX, mouseY)) 
     {
-      // selectedLine = line;
       lastMouseX = mouseX;
       lastMouseY = mouseY;
       lowBounceLine.isDragging = true;
@@ -295,27 +293,17 @@ canvas.addEventListener('mousemove', (e) =>
       lastMouseX = mouseX;
       lastMouseY = mouseY;
     
-      lowBounceLine.draw();
+      // lowBounceLine.draw();
+      drawSpectrum()
     }
-
-    
   }
 );
 
-canvas.addEventListener('mouseup', () => {
-  selectedLine = null;
-});
-
-
-
-
-
-
-
-
-
-
-
+canvas.addEventListener('mouseup', () => 
+  {
+    lowBounceLine.isDragging = false;
+  }
+);
 
 
 
@@ -345,20 +333,25 @@ function drawSpectrum()
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw the overtones
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height / 2);
-
   for (let i = 0; i < N_MAX_HARMONICS; i++)
   {
     if (i <= harmonicsSlider.value)
     {
-      let level = gains[i].gain.value*100/REF_LEVEL
-      drawOvertone((i+1)*50, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
+      let level = gains[i].gain.value*200/REF_LEVEL;
+      coordX = freqToCoord_X(oscillators[i].frequency.value);
+      // drawOvertone((i+1)*50, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
+      drawOvertone(coordX, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
     }
   }
 
   // Draw the axis
   lowBounceLine.draw();
   highBounceLine.draw();
+}
+
+function freqToCoord_X(frequency)
+{
+  const x = canvas.width*(frequency - DISPLAY_FMIN)/(DISPLAY_FMAX - DISPLAY_FMIN);
+  return x;
 }
 
