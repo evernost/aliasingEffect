@@ -12,17 +12,18 @@ const N_MAX_HARMONICS = 30;
 const REF_LEVEL = 0.05;
 
 const DISPLAY_FMAX = 4000.0;
-const DISPLAY_FMIN = -10.0;
+const DISPLAY_FMIN = -100.0;
 
 
 
 class BounceLine
 {
-  constructor(x0, y0, x1, y1) 
+  constructor(frequency, y0, y1) 
   {
-    this.x0 = x0;
+    this.frequency = frequency;
+    this.x0 = freqToCoord_X(frequency);
     this.y0 = y0;
-    this.x1 = x1;
+    this.x1 = freqToCoord_X(frequency);
     this.y1 = y1;
     this.isDragging = false;
   }
@@ -47,15 +48,13 @@ class BounceLine
   move(dx, dy) 
   {
     this.x0 += dx;
-    // this.y0 += dy;
     this.x1 += dx;
-    // this.y1 += dy;
+    this.frequency += dx*(DISPLAY_FMAX - DISPLAY_FMIN)/canvas.width;
   }
 }
 
-
-let lowBounceLine = new BounceLine(100, 0, 100, canvas.height);
-let highBounceLine = new BounceLine(canvas.width - 100, 0, canvas.width - 100, canvas.height);
+let lowBounceLine = new BounceLine(0, 0, canvas.height);
+let highBounceLine = new BounceLine(3000, 0, canvas.height);
 
 
 
@@ -181,7 +180,27 @@ function updateFrequencies()
             freq = f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value/i);
           }
         }
-        // oscillators[i].frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        
+        // Reflect frequencies
+        while ((freq < 0) || (freq > highBounceLine.frequency))
+        {
+          if (freq > highBounceLine.frequency)
+          {
+            freq = (2*highBounceLine.frequency) - freq;
+          }
+          if (freq < 0)
+          {
+            freq = 0.0 - freq;
+          } 
+        }
+
+        // if (freq > highBounceLine.frequency)
+        // {
+        //   freq = (2*highBounceLine.frequency) - freq;
+        // }
+        
+        
         oscillators[i].frequency.value = freq;
       }
     }
@@ -201,7 +220,6 @@ volSlider.addEventListener("input",
     volSliderDisplay.textContent = volSlider.value;
     if (isPlaying) 
     {
-      // masterGain.gain.setValueAtTime(volSlider.value, audioCtx.currentTime);
       masterGain.gain.value = volSlider.value;
     }
   }
@@ -269,18 +287,18 @@ canvas.addEventListener('mousedown', (e) =>
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    if (lowBounceLine.isMouseNearLine(mouseX, mouseY)) 
+    if (highBounceLine.isMouseNearLine(mouseX, mouseY)) 
     {
       lastMouseX = mouseX;
       lastMouseY = mouseY;
-      lowBounceLine.isDragging = true;
+      highBounceLine.isDragging = true;
     }
   }
 );
 
 canvas.addEventListener('mousemove', (e) => 
   {
-    if (lowBounceLine.isDragging)
+    if (highBounceLine.isDragging)
     {
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -289,19 +307,19 @@ canvas.addEventListener('mousemove', (e) =>
       const dx = mouseX - lastMouseX;
       const dy = mouseY - lastMouseY;
     
-      lowBounceLine.move(dx, dy);
+      highBounceLine.move(dx, dy);
       lastMouseX = mouseX;
       lastMouseY = mouseY;
     
-      // lowBounceLine.draw();
       drawSpectrum()
+      updateFrequencies()
     }
   }
 );
 
 canvas.addEventListener('mouseup', () => 
   {
-    lowBounceLine.isDragging = false;
+    highBounceLine.isDragging = false;
   }
 );
 
@@ -339,7 +357,6 @@ function drawSpectrum()
     {
       let level = gains[i].gain.value*200/REF_LEVEL;
       coordX = freqToCoord_X(oscillators[i].frequency.value);
-      // drawOvertone((i+1)*50, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
       drawOvertone(coordX, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
     }
   }
