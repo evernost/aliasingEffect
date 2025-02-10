@@ -14,6 +14,8 @@ const REF_LEVEL = 0.05;
 const DISPLAY_FMAX = 4000.0;
 const DISPLAY_FMIN = -100.0;
 
+let lockRatio = 1.0;
+
 
 
 class BounceLine
@@ -51,10 +53,17 @@ class BounceLine
     this.x1 += dx;
     this.frequency += dx*(DISPLAY_FMAX - DISPLAY_FMIN)/canvas.width;
   }
+
+  setFrequency(f)
+  {
+    this.x0 = freqToCoord_X(f);
+    this.x1 = freqToCoord_X(f);
+    this.frequency  = f;
+  }
 }
 
-let lowBounceLine = new BounceLine(0, 0, canvas.height);
-let highBounceLine = new BounceLine(3000, 0, canvas.height);
+let lowerBounceLine = new BounceLine(0, 0, canvas.height);
+let upperBounceLine = new BounceLine(3000, 0, canvas.height);
 
 
 
@@ -183,11 +192,11 @@ function updateFrequencies()
         
         
         // Reflect frequencies
-        while ((freq < 0) || (freq > highBounceLine.frequency))
+        while ((freq < 0) || (freq > upperBounceLine.frequency))
         {
-          if (freq > highBounceLine.frequency)
+          if (freq > upperBounceLine.frequency)
           {
-            freq = (2*highBounceLine.frequency) - freq;
+            freq = (2*upperBounceLine.frequency) - freq;
           }
           if (freq < 0)
           {
@@ -195,9 +204,9 @@ function updateFrequencies()
           } 
         }
 
-        // if (freq > highBounceLine.frequency)
+        // if (freq > upperBounceLine.frequency)
         // {
-        //   freq = (2*highBounceLine.frequency) - freq;
+        //   freq = (2*upperBounceLine.frequency) - freq;
         // }
         
         
@@ -229,6 +238,13 @@ f0Slider.addEventListener("input",
   function() 
   {
     f0ValDisplay.textContent = f0Slider.value + ' Hz';
+    
+    if (upperMirrorLockCheckbox.checked)
+    {
+      upperBounceLine.setFrequency(f0Slider.value*lockRatio);
+    }
+    
+    
     updateFrequencies()
   }
 );
@@ -265,6 +281,28 @@ oddOnlyCheckbox.addEventListener("input",
   }
 );
 
+// lowerMirrorCheckbox.addEventListener("input", 
+//   function() 
+//   {
+//     TODO!
+//   }
+// );
+
+// upperMirrorCheckbox.addEventListener("input", 
+//   function() 
+//   {
+//     TODO!
+//   }
+// );
+
+upperMirrorLockCheckbox.addEventListener("input", 
+  function() 
+  {
+    lockRatio = upperBounceLine.frequency / f0Slider.value;
+    updateGains()
+  }
+);
+
 startStop.addEventListener("click", 
   function() 
   {
@@ -287,18 +325,18 @@ canvas.addEventListener('mousedown', (e) =>
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    if (highBounceLine.isMouseNearLine(mouseX, mouseY)) 
+    if (upperBounceLine.isMouseNearLine(mouseX, mouseY)) 
     {
       lastMouseX = mouseX;
       lastMouseY = mouseY;
-      highBounceLine.isDragging = true;
+      upperBounceLine.isDragging = true;
     }
   }
 );
 
 canvas.addEventListener('mousemove', (e) => 
   {
-    if (highBounceLine.isDragging)
+    if (upperBounceLine.isDragging)
     {
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -307,7 +345,7 @@ canvas.addEventListener('mousemove', (e) =>
       const dx = mouseX - lastMouseX;
       const dy = mouseY - lastMouseY;
     
-      highBounceLine.move(dx, dy);
+      upperBounceLine.move(dx, dy);
       lastMouseX = mouseX;
       lastMouseY = mouseY;
     
@@ -319,7 +357,7 @@ canvas.addEventListener('mousemove', (e) =>
 
 canvas.addEventListener('mouseup', () => 
   {
-    highBounceLine.isDragging = false;
+    upperBounceLine.isDragging = false;
   }
 );
 
@@ -362,8 +400,8 @@ function drawSpectrum()
   }
 
   // Draw the axis
-  lowBounceLine.draw();
-  highBounceLine.draw();
+  lowerBounceLine.draw();
+  upperBounceLine.draw();
 }
 
 function freqToCoord_X(frequency)
