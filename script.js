@@ -1,3 +1,15 @@
+// ============================================================================
+// Project       : aliasingEffect
+// Module name   : -
+// File name     : script.js
+// File type     : Javascript
+// Purpose       : application entry point
+// Author        : QuBi (nitrogenium@outlook.fr)
+// Creation date : Friday, 31 January 2025
+// ----------------------------------------------------------------------------
+// Best viewed with space indentation (2 spaces)
+// ============================================================================
+
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let oscillators = [];
 let gains = [];
@@ -47,7 +59,7 @@ class BounceLine
     ctx.stroke();
   }
 
-  move(dx, dy) 
+  move(dx) 
   {
     this.x0 += dx;
     this.x1 += dx;
@@ -189,9 +201,8 @@ function updateFrequencies()
             freq = f0Slider.value*(i+1)*(1 - 0.01*wiggleSlider.value/i);
           }
         }
-        
-        
-        // Reflect frequencies
+                
+        // Reflect harmonics
         while ((freq < 0) || (freq > upperBounceLine.frequency))
         {
           if (freq > upperBounceLine.frequency)
@@ -204,12 +215,6 @@ function updateFrequencies()
           } 
         }
 
-        // if (freq > upperBounceLine.frequency)
-        // {
-        //   freq = (2*upperBounceLine.frequency) - freq;
-        // }
-        
-        
         oscillators[i].frequency.value = freq;
       }
     }
@@ -340,12 +345,10 @@ canvas.addEventListener('mousemove', (e) =>
     {
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
     
       const dx = mouseX - lastMouseX;
-      const dy = mouseY - lastMouseY;
     
-      upperBounceLine.move(dx, dy);
+      upperBounceLine.move(dx);
       lastMouseX = mouseX;
       lastMouseY = mouseY;
     
@@ -399,7 +402,7 @@ function drawSpectrum()
     }
   }
 
-  // Draw the axis
+  // Draw the reflectors
   lowerBounceLine.draw();
   upperBounceLine.draw();
 }
