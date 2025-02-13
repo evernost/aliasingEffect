@@ -42,7 +42,7 @@ class BounceLine
     this.isDragging = false;
   }
 
-  isMouseNearLine(mx, my) 
+  isMouseNearLine(mx) 
   {
     const dist = Math.abs(this.x0 - mx);
     return dist < 10;
@@ -330,7 +330,7 @@ canvas.addEventListener('mousedown', (e) =>
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    if (upperBounceLine.isMouseNearLine(mouseX, mouseY)) 
+    if (upperBounceLine.isMouseNearLine(mouseX)) 
     {
       lastMouseX = mouseX;
       lastMouseY = mouseY;
@@ -350,7 +350,6 @@ canvas.addEventListener('mousemove', (e) =>
     
       upperBounceLine.move(dx);
       lastMouseX = mouseX;
-      lastMouseY = mouseY;
     
       drawSpectrum()
       updateFrequencies()
@@ -363,8 +362,6 @@ canvas.addEventListener('mouseup', () =>
     upperBounceLine.isDragging = false;
   }
 );
-
-
 
 
 
