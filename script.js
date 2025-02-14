@@ -164,7 +164,12 @@ function updateGains()
         }
         else
         {
-          gains[i].gain.value = REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value)
+          gains[i].gain.value = REF_LEVEL*Math.pow(1.0 / (i+1), decaySlider.value);
+
+          // Apply the comb filter transfer function
+          let alpha = combFeedbackSlider.value;
+          let f = combFreqSlider.value;
+          gains[i].gain.value = Math.sqrt(1 + alpha*alpha + 2*alpha*Math.cos(2*Math.PI*f*i)) * gains[i].gain.value;
         }
       }
       else
@@ -276,6 +281,22 @@ wiggleSlider.addEventListener("input",
   {
     wiggleValDisplay.textContent = wiggleSlider.value + '%';
     updateFrequencies()
+  }
+);
+
+combFeedbackSlider.addEventListener("input", 
+  function() 
+  {
+    combFeedbackDisplay.textContent = combFeedbackSlider.value;
+    updateGains()
+  }
+);
+
+combFreqSlider.addEventListener("input", 
+  function() 
+  {
+    combFreqDisplay.textContent = combFreqSlider.value;
+    updateGains()
   }
 );
 
