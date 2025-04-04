@@ -29,6 +29,15 @@ const DISPLAY_FMIN = -100.0;
 let lockRatio = 1.0;
 
 
+if (navigator.requestMIDIAccess) 
+{
+  navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+} 
+else
+{
+  console.error("Web MIDI API is not supported in your browser.");
+}
+
 
 class BounceLine
 {
@@ -431,3 +440,47 @@ function freqToCoord_X(frequency)
   return x;
 }
 
+
+// ============================================================================
+// MIDI MANAGEMENT FUNCTION
+// ============================================================================
+function onMIDISuccess(midiAccess) 
+{
+  const inputs = midiAccess.inputs;
+  
+  let lastNoteFrequency = null;
+  
+  inputs.forEach((input) => {
+    console.log(`Input: ${input.name}`);
+    input.onmidimessage = onMIDIMessage;
+  });
+}
+
+
+function onMIDIFailure() 
+{
+  console.error("Could not access your MIDI devices.");
+}
+
+
+function onMIDIMessage(event)
+{
+  const [command, note, velocity] = event.data;
+  
+  if ((command & 0xf0) === 0x90 && velocity > 0) 
+  {
+    const frequency = 440 * Math.pow(2, (note - 69) / 12);
+    console.log(`Frequency: ${frequency.toFixed(2)} Hz`);
+    
+    lastNoteFrequency = frequency;
+    f0Slider.value = frequency;
+    
+    
+    if (upperMirrorLockCheckbox.checked)
+    {
+      upperBounceLine.setFrequency(f0Slider.value*lockRatio);
+    }
+    
+    updateFrequencies()
+  }
+}
