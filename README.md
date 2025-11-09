@@ -2,7 +2,7 @@
 Deep dive into a _controlled_ aliasing effect, and explore the consequences in realtime.
 
 ## Content
-The projet is an offline HTML page with some Javascript under the hood for the sound generation.
+The projet is an offline HTML page, with some Javascript under the hood for the sound generation.
 
 It is a great educating tool to play around with additive synthesis, but it is also pretty cool to explore some _weird_ effects affecting the spectrum.
 
@@ -48,11 +48,11 @@ The list of TODO below gives some ideas about the whereabouts of the project.
 
 ## TODO / ideas
 
-- [X] add the possibility (somehow) to sync the upper aliasing frequency with the fundamental, thus preserving the spectrum when the fundamental changes.
+- [ ] add an envelope generator, swinging the upper reflection between two tuned values
 - [ ] a right click on a slider resets its value.
 - [ ] show the reflection order with a color code.
 - [ ] add the possibility to snap the higher harmonics to a frequency with a simpler ratio.
-- [ ] add an envelope generator, swinging the upper reflection between two tuned values
 - [ ] add an envelope generator for the amplitude
 - [ ] read MIDI inputs (if possible)
+- [X] add the possibility to sync the upper aliasing frequency with the fundamental, thus preserving the spectrum when the fundamental changes.
 

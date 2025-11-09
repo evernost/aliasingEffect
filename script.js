@@ -20,15 +20,22 @@ let isPlaying = false;
 const canvas = document.getElementById('spectrumCanvas');
 const ctx = canvas.getContext('2d');
 
+let lockRatio = 1.0;
+
+
+
+// ============================================================================
+// SETTINGS
+// ============================================================================
 const N_MAX_HARMONICS = 30;
 const REF_LEVEL = 0.05;
 
 const DISPLAY_FMAX = 4000.0;
 const DISPLAY_FMIN = -100.0;
 
-let lockRatio = 1.0;
 
 
+// Try to open the MIDI device
 if (navigator.requestMIDIAccess) 
 {
   navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
@@ -39,6 +46,10 @@ else
 }
 
 
+
+// ============================================================================
+// OBJECT DEFINITION: BOUNCELINE
+// ============================================================================
 class BounceLine
 {
   constructor(frequency, y0, y1) 
@@ -91,7 +102,15 @@ let upperBounceLine = new BounceLine(3000, 0, canvas.height);
 // ============================================================================
 // MAIN CODE
 // ============================================================================
-function startOscillators() 
+
+
+
+// ----------------------------------------------------------------------------
+// FUNCTION: startOscillators
+// ----------------------------------------------------------------------------
+// Initialises the oscillators.
+// Function is called when the user presses the 'Start' button.
+function startOscillators()
 {
   if (!isPlaying) 
   {
@@ -137,6 +156,11 @@ function startOscillators()
   }
 }
 
+
+
+// ----------------------------------------------------------------------------
+// FUNCTION: stopOscillators
+// ----------------------------------------------------------------------------
 function stopOscillators() 
 {
   if (isPlaying) 
@@ -159,6 +183,9 @@ function stopOscillators()
 
 
 
+// ----------------------------------------------------------------------------
+// FUNCTION: updateGains
+// ----------------------------------------------------------------------------
 function updateGains()
 {
   if (isPlaying)
@@ -191,6 +218,11 @@ function updateGains()
   drawSpectrum();
 }
 
+
+
+// ----------------------------------------------------------------------------
+// FUNCTION: updateFrequencies
+// ----------------------------------------------------------------------------
 function updateFrequencies()
 {
   if (isPlaying)
@@ -237,6 +269,100 @@ function updateFrequencies()
   }
 }
 
+
+
+
+function drawOvertone(x, y1, y2, color = 'black', lineWidth = 2) 
+{
+  ctx.beginPath();
+  ctx.moveTo(x, y1);
+  ctx.lineTo(x, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x, y2, 5, 0, Math.PI * 2);
+  ctx.fillStyle = 'blue';
+  ctx.fill();
+  ctx.closePath();
+}
+
+
+
+function drawSpectrum() 
+{
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the overtones
+  for (let i = 0; i < N_MAX_HARMONICS; i++)
+  {
+    if (i <= harmonicsSlider.value)
+    {
+      let level = gains[i].gain.value*200/REF_LEVEL;
+      coordX = freqToCoord_X(oscillators[i].frequency.value);
+      drawOvertone(coordX, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
+    }
+  }
+
+  // Draw the reflectors
+  lowerBounceLine.draw();
+  upperBounceLine.draw();
+}
+
+function freqToCoord_X(frequency)
+{
+  const x = canvas.width*(frequency - DISPLAY_FMIN)/(DISPLAY_FMAX - DISPLAY_FMIN);
+  return x;
+}
+
+
+
+
+// ============================================================================
+// MIDI MANAGEMENT FUNCTION
+// ============================================================================
+function onMIDISuccess(midiAccess) 
+{
+  const inputs = midiAccess.inputs;
+  
+  let lastNoteFrequency = null;
+  
+  inputs.forEach((input) => {
+    console.log(`Input: ${input.name}`);
+    input.onmidimessage = onMIDIMessage;
+  });
+}
+
+
+function onMIDIFailure() 
+{
+  console.error("Could not access your MIDI devices.");
+}
+
+
+function onMIDIMessage(event)
+{
+  const [command, note, velocity] = event.data;
+  
+  if ((command & 0xf0) === 0x90 && velocity > 0) 
+  {
+    const frequency = 440 * Math.pow(2, (note - 69) / 12);
+    console.log(`Frequency: ${frequency.toFixed(2)} Hz`);
+    
+    lastNoteFrequency = frequency;
+    f0Slider.value = frequency;
+    
+    
+    if (upperMirrorLockCheckbox.checked)
+    {
+      upperBounceLine.setFrequency(f0Slider.value*lockRatio);
+    }
+    
+    updateFrequencies()
+  }
+}
 
 
 // ============================================================================
@@ -395,92 +521,3 @@ canvas.addEventListener('mouseup', () =>
 
 
 
-function drawOvertone(x, y1, y2, color = 'black', lineWidth = 2) 
-{
-  ctx.beginPath();
-  ctx.moveTo(x, y1);
-  ctx.lineTo(x, y2);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = lineWidth;
-  ctx.setLineDash([]);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(x, y2, 5, 0, Math.PI * 2);
-  ctx.fillStyle = 'blue';
-  ctx.fill();
-  ctx.closePath();
-}
-
-
-
-function drawSpectrum() 
-{
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw the overtones
-  for (let i = 0; i < N_MAX_HARMONICS; i++)
-  {
-    if (i <= harmonicsSlider.value)
-    {
-      let level = gains[i].gain.value*200/REF_LEVEL;
-      coordX = freqToCoord_X(oscillators[i].frequency.value);
-      drawOvertone(coordX, canvas.height / 2, (canvas.height / 2) - level, 'green', 2);
-    }
-  }
-
-  // Draw the reflectors
-  lowerBounceLine.draw();
-  upperBounceLine.draw();
-}
-
-function freqToCoord_X(frequency)
-{
-  const x = canvas.width*(frequency - DISPLAY_FMIN)/(DISPLAY_FMAX - DISPLAY_FMIN);
-  return x;
-}
-
-
-// ============================================================================
-// MIDI MANAGEMENT FUNCTION
-// ============================================================================
-function onMIDISuccess(midiAccess) 
-{
-  const inputs = midiAccess.inputs;
-  
-  let lastNoteFrequency = null;
-  
-  inputs.forEach((input) => {
-    console.log(`Input: ${input.name}`);
-    input.onmidimessage = onMIDIMessage;
-  });
-}
-
-
-function onMIDIFailure() 
-{
-  console.error("Could not access your MIDI devices.");
-}
-
-
-function onMIDIMessage(event)
-{
-  const [command, note, velocity] = event.data;
-  
-  if ((command & 0xf0) === 0x90 && velocity > 0) 
-  {
-    const frequency = 440 * Math.pow(2, (note - 69) / 12);
-    console.log(`Frequency: ${frequency.toFixed(2)} Hz`);
-    
-    lastNoteFrequency = frequency;
-    f0Slider.value = frequency;
-    
-    
-    if (upperMirrorLockCheckbox.checked)
-    {
-      upperBounceLine.setFrequency(f0Slider.value*lockRatio);
-    }
-    
-    updateFrequencies()
-  }
-}
